@@ -23,10 +23,6 @@ namespace MyShop.WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Logging.ClearProviders();
-            builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
-
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!));
 
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -39,7 +35,7 @@ namespace MyShop.WebApi
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "¬ведите токен: Bearer {ваш_токен}",
+                    Description = "Enter token: Bearer {your_token}",
                     Name = "Authorization",
                     Type = SecuritySchemeType.ApiKey,
                     Scheme = "Bearer"
@@ -70,11 +66,13 @@ namespace MyShop.WebApi
                 cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
                 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             });
+
             builder.Services.AddRecaptcha(configurationSection =>
             {
                 configurationSection.SiteKey = builder.Configuration["ReCaptcha:SiteKey"];
                 configurationSection.SecretKey = builder.Configuration["ReCaptcha:SecretKey"];
             });
+
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
             builder.Services.AddScoped<IEmailSender, StmpEmailSender>();
 
@@ -118,7 +116,6 @@ namespace MyShop.WebApi
                 app.UseSwaggerUI();
             }
 
-            app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
 
