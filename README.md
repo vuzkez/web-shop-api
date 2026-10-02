@@ -1,77 +1,83 @@
 # Web Shop API
 
-Лёгкий RESTful API для интернет‑магазина — пет‑проект на C#, созданный чтобы попрактиковаться в проектировании API, работе с EF Core, тестировании сервисного кода и опробовать библиотеку MediatR с паттерном CQRS в облегчённой (lite) версии без разделения на разные базы данных.
+Лёгкий RESTful API для интернет‑магазина — пет‑проект на C#, созданный, чтобы попрактиковаться в проектировании API, работе с EF Core и опробовать MediatR с подходом CQRS в упрощённом виде (без разделения на разные базы данных).
 
 ## Содержание
-- [Описание](#описание)
 - [Функции](#функции)
 - [Технологии](#технологии)
 - [Архитектура](#архитектура)
 - [Быстрый старт](#быстрый-старт)
-  - [Требования](#требования)
-  - [Клонирование и запуск](#клонирование-и-запуск)
-  - [Конфигурация окружения](#конфигурация-окружения)
-- [API (основные эндпоинты)](#api-основные-эндпоинты)
+- [API](#api-основные-эндпоинты)
 - [Аутентификация и безопасность](#аутентификация-и-безопасность)
-- [Тестирование](#тестирование)
-
-## Описание
-Web Shop API — минимальный сервис для демонстрации типичных возможностей интернет‑магазина: карточки товаров, корзина, оформление заказов, управление пользователями. Сделан в образовательных целях. Дополнительно проект использовался для практики MediatR и подхода CQRS — то есть с разделением команд и запросов на уровне кода, но без внедрения отдельной инфраструктуры для разных БД.
+- [Планы](#планы)
 
 ## Функции
 - Управление товарами: просмотр, поиск, фильтрация (CRUD для администратора)
 - Категории и атрибуты товаров
-- Корзина: добавление/удаление позиций, расчёт итоговой суммы
+- Корзина: добавление и удаление позиций, расчёт итоговой суммы
 - Оформление заказов: создание, просмотр, изменение статуса (покупатель + админ)
-- Пользователи: регистрация и вход (JWT)
-- Документация API (Swagger)
-- Unit и интеграционные тесты для ключевой логики
+- Регистрация и вход (JWT, ASP.NET Identity), роли user и admin
+- Отправка писем через SMTP
+- Интеграция Google reCAPTCHA
+- Документация API (Swagger с поддержкой Bearer-токена)
 
 ## Технологии
-- Язык: C#
-- Фреймворк: ASP.NET Core Web API
-- ORM: Entity Framework Core
-- Документация: Swagger / Swashbuckle
-- MediatR: для реализации паттерна CQRS (lite)
-- Тесты: xUnit + NSubstitute
+- C#, ASP.NET Core Web API, .NET 9
+- Entity Framework Core (SQL Server), миграции
+- ASP.NET Identity + JWT Bearer
+- MediatR (CQRS lite)
+- FluentValidation
+- MailKit (отправка email)
+- reCAPTCHA (`reCAPTCHA.AspNetCore`)
+- Swagger / Swashbuckle
 
 ## Архитектура
-- Controllers — входные HTTP‑эндпоинты
-- Services — бизнес‑логика (ProductService, CartService, OrderService, AuthService)
-- Repositories / DbContext — слой доступа к данным (EF Core)
-- DTOs — модели запросов/ответов
-- Middlewares — обработка ошибок, логирование, аутентификация
-- CQRS + MediatR — команды/запросы и обработчики для разделения ответственности в коде, без отдельного слоя репликации/нескольких БД
 
-Проект организован так, чтобы можно было тестировать бизнес‑логику отдельно от контроллеров и БД.
+Структура проекта:
+
+`Controllers`: HTTP-эндпоинты 
+`Applications`: Прикладная логика: команды и запросы MediatR с обработчиками, валидаторы, behaviors, сервисы (JWT, email), настройки 
+`Domain`: Сущности 
+`Infrastructure/Data`: `AppDbContext`, инициализация БД 
+`ExceptionHandler`: Глобальная обработка исключений 
+`Migrations`: Миграции EF Core 
+
+### MediatR и CQRS (lite)
+Команды и запросы отправляются через MediatR и обрабатываются отдельными handler-классами. Чтение и запись разделены на уровне кода, но используется одна БД и один `DbContext`.
+
+В пайплайн MediatR подключены два behavior:
+1. `LoggingBehavior` — логирование запросов
+2. `ValidationBehavior` — валидация команд и запросов через FluentValidation до вызова handler-а
+
+### Обработка ошибок
+`GlobalExceptionHandler` (реализация `IExceptionHandler`) перехватывает исключения и возвращает ответ в формате `ProblemDetails`.
+
+### Инициализация БД
+В окружении Development при старте вызывается `DbInitializer`.
 
 ## Быстрый старт
 
 ### Требования
 - .NET SDK 9.0
-- СУБД: SQL Server
+- SQL Server
 
-### Клонирование и запуск
-1. Клонируйте репозиторий:
-   ```
-   git clone https://github.com/vuzkez/web-shop-api.git
-   cd web-shop-api
-   ```
+### Запуск
+```
+git clone https://github.com/vuzkez/web-shop-api.git
+cd web-shop-api
+dotnet run
+```
 
-2. Восстановите зависимости и запустите:
-   ```
-   dotnet restore
-   dotnet build
-   dotnet run
-   ```
+Swagger доступен по адресу `/swagger` в окружении Development.
 
-Swagger обычно доступен по /swagger в режиме Development.
+### Конфигурация
+Создайте `appsettings.Development.json` (или используйте переменные окружения / user-secrets) по образцу `appsettings.template.json`.
 
-### Конфигурация окружения
-Отредактируйте файл `appsettings.Development.json` или переменные окружения:
-- ConnectionStrings: строка подключения к БД
-- Jwt: Secret, Issuer, Audience, время жизни токена
-- Logging: уровень логов
+- `ConnectionStrings:DefaultConnection` — строка подключения к SQL Server
+- `Jwt` — `Key` (не короче 32 символов), `Issuer`, `Audience`, `ExpiryInMinutes`
+- `ReCaptcha` — `SiteKey`, `SecretKey`
+- `Email` — `SmtpHost`, `SmtpPort`, `SmtpUsername`, `SmtpPassword`, `FromEmail`, `FromName`
+- `App:BaseUrl` — базовый адрес приложения
 
 Пример:
 ```
@@ -83,7 +89,7 @@ Swagger обычно доступен по /swagger в режиме Development.
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "stringConnection"
+    "DefaultConnection": "Server=localhost;Database=WebShopDb;User Id=sa;Password=your_password;TrustServerCertificate=True;"
   },
   "ReCaptcha": {
     "SiteKey": "",
@@ -109,38 +115,49 @@ Swagger обычно доступен по /swagger в режиме Development.
   "AllowedHosts": "*"
 }
 ```
-Если используются миграции EF Core:
+
+### Миграции
+Нужен инструмент `dotnet-ef` (`dotnet tool install --global dotnet-ef`):
 ```
 dotnet ef database update
 ```
 
 ## API (основные эндпоинты)
-- Товары
+
+- **Товары**
   - `GET /api/products` — список товаров (пагинация, фильтры)
-  - `GET /api/products/{id}` — детальная информация о товаре
+  - `GET /api/products/{id}` — информация о товаре
   - `POST /api/products` — создать товар (admin)
   - `PUT /api/products/{id}` — обновить товар (admin)
   - `DELETE /api/products/{id}` — удалить товар (admin)
 
-- Корзина
-  - `GET /api/cart` — получить текущее состояние корзины
-  - `POST /api/cart/items` — добавить товар в корзину
+- **Корзина**
+  - `GET /api/cart` — текущее состояние корзины
+  - `POST /api/cart/items` — добавить товар
   - `PUT /api/cart/items/{itemId}` — изменить количество
   - `DELETE /api/cart/items/{itemId}` — удалить позицию
 
-- Заказы
+- **Заказы**
   - `POST /api/orders` — создать заказ
-  - `GET /api/orders` — список заказов пользователя (admin видит все)
+  - `GET /api/orders` — заказы пользователя (admin видит все)
   - `GET /api/orders/{id}` — детали заказа
   - `PUT /api/orders/{id}/status` — изменить статус (admin)
 
-- Аутентификация
+- **Аутентификация**
   - `POST /api/auth/register` — регистрация
   - `POST /api/auth/login` — вход, возвращает JWT
 
-Примеры curl и подробности можно добавить по мере необходимости.
+Для защищённых маршрутов нужен заголовок `Authorization: Bearer <token>`.
 
 ## Аутентификация и безопасность
-- JWT‑токены для защищённых эндпоинтов
+- JWT-токены с проверкой issuer, audience, срока действия и подписи
+- ASP.NET Identity для хранения пользователей и политики паролей
 - Ролевая авторизация (user, admin)
-- Валидация входных данных и защита от типичных уязвимостей (SQL‑инъекции решены EF Core, проверка прав доступа в сервисах)
+- Валидация входных данных через FluentValidation (MediatR behavior)
+- EF Core использует параметризованные запросы, что защищает от SQL-инъекций
+- Google reCAPTCHA
+- Единый формат ошибок (`ProblemDetails`)
+
+## Планы
+- Добавить unit- и интеграционные тесты (xUnit, NSubstitute)
+- Добавить Dockerfile и docker-compose
