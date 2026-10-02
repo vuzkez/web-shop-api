@@ -41,14 +41,14 @@ Web Shop API — минимальный сервис для демонстрац
 - Repositories / DbContext — слой доступа к данным (EF Core)
 - DTOs — модели запросов/ответов
 - Middlewares — обработка ошибок, логирование, аутентификация
-- CQRS (lite) + MediatR — команды/запросы и обработчики для разделения ответственности в коде, без отдельного слоя репликации/нескольких БД
+- CQRS + MediatR — команды/запросы и обработчики для разделения ответственности в коде, без отдельного слоя репликации/нескольких БД
 
 Проект организован так, чтобы можно было тестировать бизнес‑логику отдельно от контроллеров и БД.
 
 ## Быстрый старт
 
 ### Требования
-- .NET SDK 8.0
+- .NET SDK 9.0
 - СУБД: SQL Server
 
 ### Клонирование и запуск
@@ -62,9 +62,8 @@ Web Shop API — минимальный сервис для демонстрац
    ```
    dotnet restore
    dotnet build
-   dotnet run --project src/WebShop.Api
+   dotnet run
    ```
-(Замените `src/WebShop.Api` на фактический путь к проекту в репозитории.)
 
 Swagger обычно доступен по /swagger в режиме Development.
 
@@ -77,20 +76,42 @@ Swagger обычно доступен по /swagger в режиме Development.
 Пример:
 ```
 {
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=WebShopDb;User Id=sa;Password=Your_password123;"
+    "DefaultConnection": "stringConnection"
+  },
+  "ReCaptcha": {
+    "SiteKey": "",
+    "SecretKey": ""
+  },
+  "App": {
+    "BaseUrl": "https://localhost:7040"
+  },
+  "Email": {
+    "SmtpHost": "sandbox.smtp.mailtrap.io",
+    "SmtpPort": 587,
+    "SmtpUsername": "Name",
+    "SmtpPassword": "Password",
+    "FromEmail": "@myshop.com",
+    "FromName": "MyShop"
   },
   "Jwt": {
-    "Secret": "замените-на-надежный-секрет",
-    "Issuer": "WebShopApi",
-    "Audience": "WebShopClient",
-    "ExpiresMinutes": 60
-  }
+    "Key": "",
+    "Issuer": "MyShopApi",
+    "Audience": "MyShopClient",
+    "ExpiryInMinutes": 60
+  },
+  "AllowedHosts": "*"
 }
 ```
 Если используются миграции EF Core:
 ```
-dotnet ef database update --project src/WebShop.Infrastructure --startup-project src/WebShop.Api
+dotnet ef database update
 ```
 
 ## API (основные эндпоинты)
@@ -123,10 +144,3 @@ dotnet ef database update --project src/WebShop.Infrastructure --startup-project
 - JWT‑токены для защищённых эндпоинтов
 - Ролевая авторизация (user, admin)
 - Валидация входных данных и защита от типичных уязвимостей (SQL‑инъекции решены EF Core, проверка прав доступа в сервисах)
-
-## Тестирование
-Запустить все тесты:
-```
-dotnet test
-```
-Тесты покрывают основные сервисы: ProductService, CartService, OrderService, AuthService.
