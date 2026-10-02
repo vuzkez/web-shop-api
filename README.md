@@ -16,7 +16,7 @@
 - [Тестирование](#тестирование)
 
 ## Описание
-Web Shop API — минимальный сервис для демонстрации типичных возможностей интернет‑магазина: карточки товаров, корзина, оформление заказов, управление пользователями. Сделан в образовательных целях. Дополнительно проект использовался для практики MediatR и подхода CQRS в упрощённом варианте (lite) — то есть с разделением команд и запросов на уровне кода, но без внедрения отдельной инфраструктуры для разных БД.
+Web Shop API — минимальный сервис для демонстрации типичных возможностей интернет‑магазина: карточки товаров, корзина, оформление заказов, управление пользователями. Сделан в образовательных целях. Дополнительно проект использовался для практики MediatR и подхода CQRS — то есть с разделением команд и запросов на уровне кода, но без внедрения отдельной инфраструктуры для разных БД.
 
 ## Функции
 - Управление товарами: просмотр, поиск, фильтрация (CRUD для администратора)
@@ -48,19 +48,23 @@ Web Shop API — минимальный сервис для демонстрац
 ## Быстрый старт
 
 ### Требования
+```
 - .NET SDK 8.0
 - СУБД: SQL Server
-
+```
 ### Клонирование и запуск
 1. Клонируйте репозиторий:
+   ```
    git clone https://github.com/vuzkez/web-shop-api.git
    cd web-shop-api
+   ```
 
 2. Восстановите зависимости и запустите:
+   ```
    dotnet restore
    dotnet build
    dotnet run --project src/WebShop.Api
-
+   ```
 (Замените `src/WebShop.Api` на фактический путь к проекту в репозитории.)
 
 Swagger обычно доступен по /swagger в режиме Development.
@@ -72,6 +76,7 @@ Swagger обычно доступен по /swagger в режиме Development.
 - Logging: уровень логов
 
 Пример:
+```
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=WebShopDb;User Id=sa;Password=Your_password123;"
@@ -83,33 +88,35 @@ Swagger обычно доступен по /swagger в режиме Development.
     "ExpiresMinutes": 60
   }
 }
-
+```
 Если используются миграции EF Core:
+```
 dotnet ef database update --project src/WebShop.Infrastructure --startup-project src/WebShop.Api
+```
 
 ## API (основные эндпоинты)
 - Товары
-  - GET /api/products — список товаров (пагинация, фильтры)
-  - GET /api/products/{id} — детальная информация о товаре
-  - POST /api/products — создать товар (admin)
-  - PUT /api/products/{id} — обновить товар (admin)
-  - DELETE /api/products/{id} — удалить товар (admin)
+  - `GET /api/products` — список товаров (пагинация, фильтры)
+  - `GET /api/products/{id}` — детальная информация о товаре
+  - `POST /api/products` — создать товар (admin)
+  - `PUT /api/products/{id}` — обновить товар (admin)
+  - `DELETE /api/products/{id}` — удалить товар (admin)
 
 - Корзина
-  - GET /api/cart — получить текущее состояние корзины
-  - POST /api/cart/items — добавить товар в корзину
-  - PUT /api/cart/items/{itemId} — изменить количество
-  - DELETE /api/cart/items/{itemId} — удалить позицию
+  - `GET /api/cart` — получить текущее состояние корзины
+  - `POST /api/cart/items` — добавить товар в корзину
+  - `PUT /api/cart/items/{itemId}` — изменить количество
+  - `DELETE /api/cart/items/{itemId}` — удалить позицию
 
 - Заказы
-  - POST /api/orders — создать заказ
-  - GET /api/orders — список заказов пользователя (admin видит все)
-  - GET /api/orders/{id} — детали заказа
-  - PUT /api/orders/{id}/status — изменить статус (admin)
+  - `POST /api/orders` — создать заказ
+  - `GET /api/orders` — список заказов пользователя (admin видит все)
+  - `GET /api/orders/{id}` — детали заказа
+  - `PUT /api/orders/{id}/status` — изменить статус (admin)
 
 - Аутентификация
-  - POST /api/auth/register — регистрация
-  - POST /api/auth/login — вход, возвращает JWT
+  - `POST /api/auth/register` — регистрация
+  - `POST /api/auth/login` — вход, возвращает JWT
 
 Примеры curl и подробности можно добавить по мере необходимости.
 
@@ -120,6 +127,7 @@ dotnet ef database update --project src/WebShop.Infrastructure --startup-project
 
 ## Тестирование
 Запустить все тесты:
+```
 dotnet test
-
-Тесты покрывают основные сервисы: ProductService, CartService, OrderService, AuthService (unit + интеграционные сценарии).
+```
+Тесты покрывают основные сервисы: ProductService, CartService, OrderService, AuthService.
